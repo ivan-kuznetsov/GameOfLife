@@ -6,7 +6,7 @@ const GRID_COLS = 64;
 
 const GAME_SPEED = 100;
 
-const greed = createGrid(GRID_ROWS, GRID_COLS);
+const grid = createGrid(GRID_ROWS, GRID_COLS);
 const nextGrid = createGrid(GRID_ROWS, GRID_COLS);
 
 let isPlaying = false;
@@ -14,6 +14,11 @@ let isPlaying = false;
 const root = document.getElementById("root");
 const table = createTable(GRID_ROWS, GRID_COLS);
 createControls();
+
+function play() {
+    computeNextGrid();
+    updateView();
+}
 
 function updateView() {
     for (let i = 0; i < grid.length; i++) {
@@ -58,7 +63,7 @@ function createTable(rows, cols) {
         const rowIndex = cell.parentNode.rowIndex;
         const isCellAlive = grid[rowIndex][colIndex] === 1 ? true : false;
 
-        grid[rowIndex][cellIndex] = isCellAlive ? 0 : 1;
+        grid[rowIndex][colIndex] = isCellAlive ? 0 : 1;
 
         cell.classList.toggle("alive", !isCellAlive);
     });
@@ -79,6 +84,7 @@ function createControls() {
         } else {
             isPlaying = true;
             this.textContent = "pause";
+            play();
         }
     });
 
@@ -88,6 +94,9 @@ function createControls() {
     resetButton.addEventListener("click", function() {
         isPlaying = false;
         startButton.textContent = "play_arrow";
+
+        resetGrid();
+        updateView();
     });
 
     const randomizeButton = document.createElement("button");
@@ -132,3 +141,50 @@ function randomizeGrid() {
 
     return grid;
 }
+
+function resetGrid() {
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            grid[i][j] = 0;
+        }
+    }
+
+    return grid;
+}
+
+function computeNextGrid() {
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            applyRules(i, j);
+        }
+    }
+}
+
+function applyRules(row, col) {
+    const isCellAlive = grid[row][col];
+    const numberofNeighbors = countNeighbors(row, col);
+
+    if (isCellAlive) {
+        if (numberofNeighbors < 2) {
+            //cell has to be dead
+            nextGrid[row][col] = 0;
+        } else if (numberofNeighbors === 2 || numberofNeighbors === 3) {
+            //cell has to be alive
+            nextGrid[row][col] = 1;
+        } else if (numberofNeighbors > 3) {
+            //cell has to be dead
+            nextGrid[row][col] = 0;
+        }
+    } else {
+        if (numberofNeighbors === 3) {
+            //cell has to be alive
+            nextGrid[row][col] = 1;
+        }
+    }
+}
+
+// function countNeighbors(row, col) {
+//     let count = 0;
+
+//     if(row-1 >= 0)
+// }
