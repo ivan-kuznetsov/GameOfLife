@@ -4,12 +4,13 @@ const GRID_HEIGHT = 720;
 const GRID_ROWS = 36;
 const GRID_COLS = 64;
 
-const GAME_SPEED = 100;
+const GAME_SPEED = 1000;
 
 const grid = createGrid(GRID_ROWS, GRID_COLS);
 const nextGrid = createGrid(GRID_ROWS, GRID_COLS);
 
 let isPlaying = false;
+let interval = null;
 
 const root = document.getElementById("root");
 const table = createTable(GRID_ROWS, GRID_COLS);
@@ -81,9 +82,11 @@ function createControls() {
         if (isPlaying) {
             isPlaying = false;
             this.textContent = "play_arrow";
+            clearInterval(interval);
         } else {
             isPlaying = true;
             this.textContent = "pause";
+            interval = setInterval(play, GAME_SPEED);
             play();
         }
     });
@@ -95,6 +98,7 @@ function createControls() {
         isPlaying = false;
         startButton.textContent = "play_arrow";
 
+        clearInterval(interval);
         resetGrid();
         updateView();
     });
@@ -106,14 +110,25 @@ function createControls() {
         isPlaying = false;
         startButton.textContent = "play_arrow";
 
+        clearInterval(interval);
         randomizeGrid();
         updateView();
+    });
+
+    const speedSlider = document.createElement("input");
+    speedSlider.type = "range";
+    speedSlider.min = 0;
+    speedSlider.max = 900;
+    speedSlider.step = 100;
+    speedSlider.addEventListener("input", function() {
+        clearInterval(interval);
+        interval = setInterval(play, GAME_SPEED - this.value);
     });
 
     const container = document.createElement("div");
     container.className = "controls";
 
-    container.append(startButton, resetButton, randomizeButton);
+    container.append(startButton, resetButton, randomizeButton, speedSlider);
 
     root.appendChild(container);
 }
@@ -158,6 +173,17 @@ function computeNextGrid() {
             applyRules(i, j);
         }
     }
+
+    copyNextGrid();
+}
+
+function copyNextGrid() {
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            grid[i][j] = nextGrid[i][j];
+            nextGrid[i][j] = 0;
+        }
+    }
 }
 
 function applyRules(row, col) {
@@ -183,8 +209,72 @@ function applyRules(row, col) {
     }
 }
 
-// function countNeighbors(row, col) {
-//     let count = 0;
+function countNeighbors(row, col) {
+    let count = 0;
 
-//     if(row-1 >= 0)
-// }
+    //if previous row exists
+    //top
+    if (row - 1 >= 0) {
+        if (grid[row - 1][col] === 1) {
+            count++;
+        }
+    }
+
+    //if previous row and col exitsr
+    //top left
+    if (row - 1 >= 0 && col - 1 >= 0) {
+        if (grid[row - 1][col - 1] === 1) {
+            count++;
+        }
+    }
+
+    //if previous row and next col exitsr
+    //top right
+    if (row - 1 >= 0 && col + 1 < GRID_COLS) {
+        if (grid[row - 1][col + 1] === 1) {
+            count++;
+        }
+    }
+
+    //if cell from left exitsts
+    //left
+    if (col - 1 >= 0) {
+        if (grid[row][col - 1] === 1) {
+            count++;
+        }
+    }
+
+    //if cell from right exitsts
+    //right
+    if (col + 1 < GRID_COLS) {
+        if (grid[row][col + 1] === 1) {
+            count++;
+        }
+    }
+
+    //if next row exists
+    //bottom
+    if (row + 1 < GRID_ROWS) {
+        if (grid[row + 1][col] === 1) {
+            count++;
+        }
+    }
+
+    //if next row and privous col exitsr
+    //bottom left
+    if (row + 1 < GRID_ROWS && col - 1 >= 0) {
+        if (grid[row + 1][col - 1] === 1) {
+            count++;
+        }
+    }
+
+    //if nexr row and col exitsr
+    //bottom right
+    if (row + 1 < GRID_ROWS && col + 1 < GRID_COLS) {
+        if (grid[row + 1][col + 1] === 1) {
+            count++;
+        }
+    }
+
+    return count;
+}
